@@ -1,0 +1,181 @@
+Домашняя работа: Уроки 3–4. Типы данных и параметры. Нормализация до 3НФ
+Исходная таблица «Успеваемость» (StudentGrades)
+student_id 	student_name 	group_id 	group_name 	teacher_id 	teacher_name 	subject_id 	subject_name 	exam_date 	grade
+INT PK 	VARCHAR(100) 	VARCHAR(10) 	VARCHAR(50) 	INT 	VARCHAR(100) 	INT 	VARCHAR(100) 	DATE 	INT
+NOT NULL 	NOT NULL 	NOT NULL 	NOT NULL 	NOT NULL 	NOT NULL 	NOT NULL 	NOT NULL 	NOT NULL 	NOT NULL
+1 	Петров П. 	G-1 	Группа А 	5 	Петрова М. 	1 	Математика 	2026-01-15 	4
+2 	Иванов И. 	G-1 	Группа А 	7 	Смирнов А. 	2 	Физика 	2026-01-20 	3
+3 	Сидоров С. 	G-2 	Группа Б 	5 	Петрова М. 	1 	Математика 	2026-01-18 	5
+4 	Петров П. 	G-1 	Группа А 	8 	Козлова Е. 	3 	Информатика 	2026-01-25 	5
+5 	Кузнецов К. 	G-2 	Группа Б 	7 	Смирнов А. 	2 	Физика 	2026-01-22 	4
+
+    Примечание: в исходной таблице вместо ??? указаны рекомендуемые типы и параметры (см. выше).
+    Полный список финальных таблиц после нормализации приведён в конце документа.
+
+Часть 1. Теоретический анализ
+1. Первичный ключ исходной таблицы
+
+Первичный ключ: student_id, subject_id — составной ключ.
+
+Обоснование:
+
+    Один студент может сдавать несколько предметов → student_id не уникален.
+    Один предмет сдаёт много студентов → subject_id не уникален.
+    Комбинация «студент + предмет» однозначно определяет строку (одна оценка и одна дата экзамена на студента по предмету).
+    Другие варианты не подходят:
+        student_id — не уникален (студент может иметь несколько оценок).
+        exam_date — несколько экзаменов могут быть в один день.
+        grade — значения повторяются.
+        Любой одиночный атрибут или другая комбинация без student_id + subject_id не гарантирует уникальность.
+
+2. Функциональные зависимости (ФЗ)
+
+student_id → student_name, group_id group_id → group_name teacher_id → teacher_name subject_id → subject_name (student_id, subject_id) → exam_date, grade, teacher_id
+
+Дополнительно из данных видно, что преподаватель закреплён за предметом, но мы оставляем teacher_id в таблице оценок для гибкости:
+
+subject_id → teacher_id (в текущих данных выполняется, но не обязательно всегда)
+3. Транзитивные зависимости
+
+Транзитивные зависимости (неключевой атрибут зависит от другого неключевого):
+
+    student_id → group_id → group_name
+    (group_name транзитивно зависит от student_id через group_id)
+    teacher_id → teacher_name
+    (если teacher_id не входит в ключ)
+    subject_id → subject_name
+
+4. Нормальная форма исходной таблицы
+
+Таблица находится в 1НФ, но не в 2НФ (и тем более не в 3НФ).
+
+Почему:
+
+    Все значения атомарны → 1НФ выполнена.
+    Есть частичные зависимости от части составного ключа:
+        student_name, group_id, group_name зависят только от student_id
+        subject_name зависит только от subject_id → нарушение 2НФ.
+    Есть транзитивные зависимости → нарушение 3НФ.
+
+Часть 2. Нормализация до 3НФ
+Итоговый список таблиц
+
+    Groups — группы студентов
+    Students — студенты
+    Teachers — преподаватели
+    Subjects — предметы
+    Grades — результаты экзаменов (оценки)
+
+ER-диаграмма (схема данных)
+
+┌─────────────┐       ┌──────────────┐       ┌─────────────┐
+│   Groups    │       │   Students   │       │   Teachers  │
+├─────────────┤       ├──────────────┤       ├─────────────┤
+│ group_id PK │◄──────│ student_id PK│       │ teacher_id PK│
+│ group_name  │  1:N  │ student_name │       │ teacher_name│
+└─────────────┘       │ group_id FK  │       └──────▲──────┘
+                      └──────┬───────┘              │
+                             │                      │
+                             │ 1:N                  │ 1:N
+                             │                      │
+                      ┌──────▼───────┐              │
+                      │    Grades    │──────────────┘
+                      ├──────────────┤
+                      │ student_id FK│ PK
+                      │ subject_id FK│ PK
+                      │ teacher_id FK│
+                      │ exam_date    │
+                      │ grade        │
+                      └──────┬───────┘
+                             │
+                             │ N:1
+                      ┌──────▼───────┐
+                      │   Subjects   │
+                      ├──────────────┤
+                      │ subject_id PK│
+                      │ subject_name │
+                      └──────────────┘
+
+Связи:
+
+    Groups 1:N Students (одна группа — много студентов)
+    Students 1:N Grades (один студент — много оценок)
+    Subjects 1:N Grades (один предмет — много оценок)
+    Teachers 1:N Grades (один преподаватель — много экзаменов)
+
+SQL-скрипты CREATE TABLE
+
+-- 1. Таблица групп
+CREATE TABLE Groups (
+    group_id    VARCHAR(10)  PRIMARY KEY,
+    group_name  VARCHAR(50)  NOT NULL UNIQUE
+);
+
+-- 2. Таблица студентов
+CREATE TABLE Students (
+    student_id    INT          PRIMARY KEY,
+    student_name  VARCHAR(100) NOT NULL,
+    group_id      VARCHAR(10)  NOT NULL,
+    FOREIGN KEY (group_id) REFERENCES Groups(group_id)
+);
+
+-- 3. Таблица преподавателей
+CREATE TABLE Teachers (
+    teacher_id    INT          PRIMARY KEY,
+    teacher_name  VARCHAR(100) NOT NULL
+);
+
+-- 4. Таблица предметов
+CREATE TABLE Subjects (
+    subject_id    INT          PRIMARY KEY,
+    subject_name  VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- 5. Таблица оценок (результаты тестирования)
+CREATE TABLE Grades (
+    student_id  INT   NOT NULL,
+    subject_id  INT   NOT NULL,
+    teacher_id  INT   NOT NULL,
+    exam_date   DATE  NOT NULL,
+    grade       INT   NOT NULL CHECK (grade BETWEEN 1 AND 5),
+    PRIMARY KEY (student_id, subject_id),
+    FOREIGN KEY (student_id) REFERENCES Students(student_id),
+    FOREIGN KEY (subject_id) REFERENCES Subjects(subject_id),
+    FOREIGN KEY (teacher_id) REFERENCES Teachers(teacher_id)
+);
+
+Данные после нормализации (пример заполнения)
+
+-- Groups
+INSERT INTO Groups VALUES 
+('G-1', 'Группа А'),
+('G-2', 'Группа Б');
+
+-- Students
+INSERT INTO Students VALUES 
+(1, 'Петров П.', 'G-1'),
+(2, 'Иванов И.', 'G-1'),
+(3, 'Сидоров С.', 'G-2'),
+(4, 'Петров П.', 'G-1'),
+(5, 'Кузнецов К.', 'G-2');
+
+-- Teachers
+INSERT INTO Teachers VALUES 
+(5, 'Петрова М.'),
+(7, 'Смирнов А.'),
+(8, 'Козлова Е.');
+
+-- Subjects
+INSERT INTO Subjects VALUES 
+(1, 'Математика'),
+(2, 'Физика'),
+(3, 'Информатика');
+
+-- Grades
+INSERT INTO Grades VALUES 
+(1, 1, 5, '2026-01-15', 4),
+(2, 2, 7, '2026-01-20', 3),
+(3, 1, 5, '2026-01-18', 5),
+(4, 3, 8, '2026-01-25', 5),
+(5, 2, 7, '2026-01-22', 4);
+
