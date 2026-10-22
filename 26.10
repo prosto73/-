@@ -1,0 +1,21 @@
+user@linux:~$ mkdir global_prog
+user@linux:~$ chmod 764 global_prog
+user@linux:~$ mkdir global_prog/my_proj
+user@linux:~$ chmod 700 global_prog/my_proj
+user@linux:~$ touch global_prog/my_proj/file1.txt global_prog/my_proj/file2.txt
+user@linux:~$ touch global_prog/file_a.txt global_prog/file_b.txt
+user@linux:~$ chmod 760 global_prog/file_a.txt
+user@linux:~$ chmod 744 global_prog/file_b.txt
+user@linux:~$ ls -lR global_prog
+
+global_prog:
+total 8
+-rwxrw---- 1 user user    0 Oct 20 14:30 file_a.txt
+-rwxr--r-- 1 user user    0 Oct 20 14:30 file_b.txt
+drwx------ 2 user user 4096 Oct 20 14:30 my_proj
+
+global_prog/my_proj:
+total 0
+-rw-r--r-- 1 user user 0 Oct 20 14:30 file1.txt
+-rw-r--r-- 1 user user 0 Oct 20 14:30 file2.txt
+user@linux:~$ 
