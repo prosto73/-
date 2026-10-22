@@ -1,0 +1,62 @@
+# Пункт 1: Проведено исследование темы ООП (наследование, методы)
+
+# Пункт 3: Создаем один родительский класс (по тематике Task Manager)
+class Task:
+    def __init__(self, title, description):
+        self.title = title
+        self.description = description
+        self.is_completed = False
+
+    # Пункт 4: В родительском классе реализуем два метода
+    def mark_completed(self):
+        self.is_completed = True
+        print(f"Задача '{self.title}' отмечена как выполненная.")
+
+    def display_info(self):
+        status = "Выполнено" if self.is_completed else "В процессе"
+        print(f"[{status}] {self.title}: {self.description}")
+
+
+# Пункт 5: Создаем два класса-наследника
+class UrgentTask(Task):
+    def __init__(self, title, description, deadline):
+        # Вызываем конструктор родителя
+        super().__init__(title, description)
+        self.deadline = deadline
+
+    # Пункт 5: Переопределяем метод display_info, созданный в родителе
+    def display_info(self):
+        status = "Выполнено" if self.is_completed else "В процессе"
+        print(f"🔥 СРОЧНО! [{status}] {self.title}: {self.description}. Дедлайн: {self.deadline}")
+
+
+class RecurringTask(Task):
+    def __init__(self, title, description, frequency):
+        super().__init__(title, description)
+        self.frequency = frequency
+
+    # Пункт 5: Переопределяем метод display_info, созданный в родителе
+    def display_info(self):
+        status = "Выполнено" if self.is_completed else "В процессе"
+        print(f"🔄 [{status}] {self.title}: {self.description}. Повтор: {self.frequency}")
+
+
+# --- Проверка работы кода (Пункт 2) ---
+if __name__ == "__main__":
+    print("--- Тестирование классов ---")
+    
+    # Создаем экземпляры классов
+    basic_task = Task("Купить хлеб", "Зайти в магазин у дома")
+    urgent_task = UrgentTask("Сдать ДЗ", "Написать код на Python", "Сегодня до 23:59")
+    recurring_task = RecurringTask("Полить цветы", "На подоконнике", "Каждые 3 дня")
+
+    # Демонстрация работы родительского класса
+    basic_task.display_info()
+    
+    # Демонстрация работы наследников (полиморфизм - один метод, разное поведение)
+    urgent_task.display_info()
+    recurring_task.display_info()
+    
+    print("\n--- Проверка переопределенного метода mark_completed ---")
+    urgent_task.mark_completed()
+    urgent_task.display_info()
