@@ -1,0 +1,116 @@
+import tkinter as tk
+
+# --- Пункт 1: Установка и импорт библиотеки ---
+# tkinter уже встроен в Python, поэтому установка через pip не требуется, 
+# достаточно просто импортировать его (сделано выше).
+
+# --- Создание главного окна ---
+root = tk.Tk()
+root.title("Калькулятор")
+root.geometry("300x400")
+
+# Переменная для хранения введенного выражения
+expression = ""
+
+# --- Пункт 4 (частично): Создание поля вывода ---
+# Создаем поле ввода (Label), которое будет отображать числа и знаки
+text_input = tk.Label(root, text="", bg="white", fg="black", font=("Arial", 20), anchor="e", padx=10, pady=10)
+text_input.pack(fill="x", padx=10, pady=10)
+
+# --- Пункт 2 и 3: Создание интерфейса и матрицы кнопок ---
+# Создаем фрейм (контейнер) для кнопок
+buttons_frame = tk.Frame(root)
+buttons_frame.pack(expand=True, fill="both")
+
+# Список (матрица), содержащий названия функций и знаки
+buttons_matrix = [
+    ["7", "8", "9", "/"],
+    ["4", "5", "6", "*"],
+    ["1", "2", "3", "-"],
+    ["0", ".", "=", "+"]
+]
+
+# --- Пункт 6: Создание 5 пустых функций ---
+def multiply():
+    global expression
+    expression += "*"
+    update_display()
+
+def divide():
+    global expression
+    expression += "/"
+    update_display()
+
+def sum_():
+    global expression
+    expression += "+"
+    update_display()
+
+def diff():
+    global expression
+    expression += "-"
+    update_display()
+
+def result():
+    global expression
+    try:
+        # Функция eval вычисляет строку как математическое выражение
+        calc_result = str(eval(expression))
+        expression = calc_result
+        update_display()
+    except Exception:
+        expression = "Ошибка"
+        update_display()
+        expression = ""
+
+# --- Пункт 5: Функция для кнопок ввода чисел и знаков ---
+def button_click(char):
+    global expression
+    # Если на экране была ошибка, очищаем ее
+    if expression == "Ошибка":
+        expression = ""
+    
+    # Если нажали "=", вызываем функцию result
+    if char == "=":
+        result()
+    # Если нажали математический знак, вызываем соответствующую функцию
+    elif char == "+":
+        sum_()
+    elif char == "-":
+        diff()
+    elif char == "*":
+        multiply()
+    elif char == "/":
+        divide()
+    # Иначе добавляем символ (цифру или точку) в выражение
+    else:
+        expression += str(char)
+        update_display()
+
+# Вспомогательная функция для обновления текста на экране
+def update_display():
+    text_input.config(text=expression)
+
+# --- Пункт 4: Циклы для расстановки кнопок ---
+# Используем вложенные циклы for для прохода по матрице
+for row_index, row in enumerate(buttons_matrix):
+    for col_index, button_text in enumerate(row):
+        # Создаем кнопку
+        btn = tk.Button(
+            buttons_frame, 
+            text=button_text, 
+            font=("Arial", 16),
+            # Пункт 7: Назначаем функцию на кнопку через command
+            # Используем lambda, чтобы передать конкретный символ в функцию button_click
+            command=lambda t=button_text: button_click(t)
+        )
+        # Размещаем кнопку в сетке (grid)
+        btn.grid(row=row_index, column=col_index, sticky="nsew")
+
+# Настраиваем веса строк и столбцов, чтобы кнопки растягивались
+for i in range(4):
+    buttons_frame.rowconfigure(i, weight=1)
+    buttons_frame.columnconfigure(i, weight=1)
+
+# Запуск главного цикла приложения
+root.mainloop()
