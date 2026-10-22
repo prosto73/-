@@ -1,0 +1,74 @@
+-- Выбираем нашу схему
+USE Academy;
+
+-- 1. Создаем таблицу subjects (Предметы) - родительская таблица
+CREATE TABLE subjects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+-- 2. Создаем таблицу classes (Классы/Аудитории)
+CREATE TABLE classes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    room_number VARCHAR(20)
+);
+
+-- 3. Создаем таблицу student_group (Группы студентов)
+CREATE TABLE student_group (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    class_id INT,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL
+);
+
+-- 4. Создаем таблицу teachers (Учителя)
+CREATE TABLE teachers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    subject_id INT,
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL
+);
+
+-- 5. Создаем таблицу students (Студенты)
+CREATE TABLE students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    group_id INT,
+    FOREIGN KEY (group_id) REFERENCES student_group(id) ON DELETE SET NULL
+);
+
+-- 6. Создаем таблицу lessons (Уроки/Занятия)
+CREATE TABLE lessons (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    subject_id INT,
+    teacher_id INT,
+    group_id INT,
+    lesson_date DATE,
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE SET NULL,
+    FOREIGN KEY (group_id) REFERENCES student_group(id) ON DELETE CASCADE
+);
+
+-- 7. Создаем таблицу schedules (Расписания)
+CREATE TABLE schedules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lesson_id INT,
+    class_id INT,
+    schedule_time TIME,
+    FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
+);
+
+-- 8. Создаем таблицу student_grades (Оценки студентов)
+CREATE TABLE student_grades (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT,
+    lesson_id INT,
+    grade INT CHECK (grade BETWEEN 1 AND 5),
+    grade_date DATE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
+);
