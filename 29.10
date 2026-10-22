@@ -1,0 +1,40 @@
+import tkinter as tk
+
+# Пункт 3: Класс называется Interface
+class Interface:
+    # Пункт 4: В классе должен быть метод __init__()
+    def __init__(self):
+        # Пункт 4: Класс должен создавать главный объект root
+        self.root = tk.Tk()
+        
+        # Пункт 5: Заполните метод __init__() настройками компонента root
+        self.root.title("Task Manager")
+        self.root.geometry("400x300")
+        self.root.configure(bg="#f0f0f0")
+        
+        # Добавим пару элементов для наглядности, чтобы окно не было пустым
+        self.label = tk.Label(
+            self.root, 
+            text="Добро пожаловать в Task Manager!", 
+            font=("Arial", 14),
+            bg="#f0f0f0"
+        )
+        self.label.pack(pady=20)
+        
+        self.button = tk.Button(
+            self.root, 
+            text="Добавить задачу", 
+            font=("Arial", 12)
+        )
+        self.button.pack(pady=10)
+
+    # Метод для запуска главного цикла окна
+    def run(self):
+        self.root.mainloop()
+
+# Блок для проверки работы программы
+if __name__ == "__main__":
+    # Создаем экземпляр нашего класса
+    app = Interface()
+    # Запускаем приложение
+    app.run()
