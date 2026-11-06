@@ -1,0 +1,61 @@
+USE Academy; -- Убедитесь, что выбрана правильная база данных
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS ps_shedule_insert$$
+
+CREATE PROCEDURE ps_shedule_insert()
+BEGIN
+    -- Объявляем переменные для счетчиков
+    DECLARE v_class_id INT DEFAULT 1;
+    DECLARE v_lesson_id INT DEFAULT 1;
+    
+    -- Переменные для хранения ID из других таблиц (учителя и предмета)
+    DECLARE v_teacher_id INT;
+    DECLARE v_subject_id INT;
+
+    -- 1. Цикл по классам (например, с 1 по 11)
+    WHILE v_class_id <= 11 DO
+        
+        -- Сбрасываем счетчик уроков для каждого нового класса
+        SET v_lesson_id = 1;
+        
+        -- 2. Вложенный цикл по урокам (например, с 1 по 7)
+        WHILE v_lesson_id <= 7 DO
+            
+            -- Логика IF: Например, чтобы не ставить сложные предметы первым уроком
+            -- или чтобы чередовать предметы. 
+            -- Здесь мы просто выбираем случайного учителя и предмет из существующих таблиц.
+            
+            -- Получаем случайного учителя (предполагаем, что таблица teachers не пуста)
+            SELECT id INTO v_teacher_id FROM teachers ORDER BY RAND() LIMIT 1;
+            
+            -- Получаем случайный предмет
+            SELECT id INTO v_subject_id FROM subjects ORDER BY RAND() LIMIT 1;
+
+            -- Использование IF для условия (например, поставим физкультуру только на 5-7 урок)
+            IF v_lesson_id > 4 THEN
+                -- В реальной задаче тут можно жестко задать предмет, 
+                -- но для примера просто вставляем данные
+                INSERT INTO schedule (class_id, subject_id, teacher_id, lesson_id) 
+                VALUES (v_class_id, v_subject_id, v_teacher_id, v_lesson_id);
+            ELSE
+                -- Ставим обычные предметы
+                INSERT INTO schedule (class_id, subject_id, teacher_id, lesson_id) 
+                VALUES (v_class_id, v_subject_id, v_teacher_id, v_lesson_id);
+            END IF;
+
+            -- Увеличиваем счетчик уроков
+            SET v_lesson_id = v_lesson_id + 1;
+        END WHILE;
+        
+        -- Увеличиваем счетчик классов
+        SET v_class_id = v_class_id + 1;
+    END WHILE;
+
+END$$
+
+DELIMITER ;
+
+-- Вызов процедуры для проверки
+CALL ps_shedule_insert();
