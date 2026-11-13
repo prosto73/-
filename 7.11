@@ -1,0 +1,60 @@
+USE Academy;
+
+CREATE TABLE IF NOT EXISTS students (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50)  NOT NULL,
+    last_name  VARCHAR(50)  NOT NULL,
+    email      VARCHAR(100) NOT NULL,
+    birth_date DATE         NOT NULL,
+    group_id   INT          NULL,
+    FOREIGN KEY (group_id) REFERENCES student_group(id)
+);
+
+DROP FUNCTION IF EXISTS fn_student_email;
+DROP PROCEDURE IF EXISTS ps_students_insert;
+
+DELIMITER $$
+
+CREATE FUNCTION fn_student_email(p_first VARCHAR(50), p_last VARCHAR(50), p_index INT)
+RETURNS VARCHAR(100)
+DETERMINISTIC
+NO SQL
+BEGIN
+    RETURN CONCAT(LOWER(p_first), '.', LOWER(p_last), p_index, '@academy.com');
+END$$
+
+CREATE PROCEDURE ps_students_insert(IN p_count INT)
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    DECLARE v_first VARCHAR(50);
+    DECLARE v_last VARCHAR(50);
+    DECLARE v_group INT;
+
+    WHILE i <= p_count DO
+        SET v_first = ELT(FLOOR(1 + RAND() * 8),
+                          'Ivan', 'Petro', 'Oleh', 'Andrii',
+                          'Maria', 'Olena', 'Anna', 'Sofia');
+        SET v_last = ELT(FLOOR(1 + RAND() * 8),
+                         'Shevchenko', 'Kovalenko', 'Bondarenko', 'Tkachenko',
+                         'Kravchenko', 'Melnyk', 'Boyko', 'Lysenko');
+
+        SET v_group = NULL;
+        SELECT id INTO v_group FROM student_group ORDER BY RAND() LIMIT 1;
+
+        INSERT INTO students (first_name, last_name, email, birth_date, group_id)
+        VALUES (
+            v_first,
+            v_last,
+            fn_student_email(v_first, v_last, i),
+            DATE_ADD('2000-01-01', INTERVAL FLOOR(RAND() * 2000) DAY),
+            v_group
+        );
+
+        SET i = i + 1;
+    END WHILE;
+END$$
+
+DELIMITER ;
+
+CALL ps_students_insert(20);
+SELECT * FROM students;
