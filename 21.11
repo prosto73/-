@@ -1,0 +1,60 @@
+-- Практическая работа: два триггера MySQL (BEFORE INSERT и AFTER INSERT)
+-- Выполнить весь скрипт в MySQL Workbench.
+
+CREATE DATABASE IF NOT EXISTS trigger_demo;
+USE trigger_demo;
+
+-- Основная таблица
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL
+);
+
+-- Таблица журнала для действий AFTER INSERT
+CREATE TABLE IF NOT EXISTS user_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    action_text VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Удаляем триггеры, если скрипт запускается повторно
+DROP TRIGGER IF EXISTS users_before_insert;
+DROP TRIGGER IF EXISTS users_after_insert;
+
+DELIMITER //
+
+-- Триггер BEFORE INSERT:
+-- удаляет лишние пробелы в имени и приводит email к нижнему регистру.
+CREATE TRIGGER users_before_insert
+BEFORE INSERT ON users
+FOR EACH ROW
+BEGIN
+    SET NEW.user_name = TRIM(NEW.user_name);
+    SET NEW.email = LOWER(TRIM(NEW.email));
+END//
+
+-- Триггер AFTER INSERT:
+-- добавляет запись о новом пользователе в таблицу журнала.
+CREATE TRIGGER users_after_insert
+AFTER INSERT ON users
+FOR EACH ROW
+BEGIN
+    INSERT INTO user_logs (user_id, action_text)
+    VALUES (NEW.id, CONCAT('Добавлен пользователь: ', NEW.user_name));
+END//
+
+DELIMITER ;
+
+-- Проверка работы триггеров:
+INSERT INTO users (user_name, email)
+VALUES ('  Ivan Ivanov  ', ' IVAN@EXAMPLE.COM ');
+
+-- Посмотреть результат BEFORE INSERT (данные уже нормализованы)
+SELECT * FROM users;
+
+-- Посмотреть результат AFTER INSERT (появилась запись в журнале)
+SELECT * FROM user_logs;
+
+-- Посмотреть созданные триггеры
